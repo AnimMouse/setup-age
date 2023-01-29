@@ -1,0 +1,54 @@
+name: Setup age action
+description: Setup/Install age for GitHub Actions
+branding:
+  icon: lock
+  color: gray-dark
+inputs:
+  version:
+    description: age version
+    default: latest
+  token:
+    description: GitHub token to avoid API rate limiting
+    default: ${{ github.token }}
+    
+runs:
+  using: composite
+  steps:
+    - name: Get age version for Unix-like
+      id: version-unix-like
+      if: runner.os == 'Linux' || runner.os == 'macOS'
+      shell: bash
+      run: $GITHUB_ACTION_PATH/scripts/version/Unix-like.sh
+      env:
+        version: ${{ inputs.version }}
+        GITHUB_TOKEN: ${{ inputs.token }}
+        
+    - name: Get age version for Windows
+      id: version-windows
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: '& $env:GITHUB_ACTION_PATH\scripts\version\Windows.ps1'
+      env:
+        version: ${{ inputs.version }}
+        GITHUB_TOKEN: ${{ inputs.token }}
+        
+    - name: Download age for Unix-like
+      if: runner.os == 'Linux' || runner.os == 'macOS'
+      shell: bash
+      working-directory: ${{ runner.temp }}
+      run: $GITHUB_ACTION_PATH/scripts/download/Unix-like.sh
+      env:
+        version: ${{ steps.version-unix-like.outputs.version }}
+        
+    - name: Download age for Windows
+      if: runner.os == 'Windows'
+      shell: pwsh
+      working-directory: ${{ runner.temp }}
+      run: '& $env:GITHUB_ACTION_PATH\scripts\download\Windows.ps1'
+      env:
+        version: ${{ steps.version-windows.outputs.version }}
+        
+    - name: Install age on tool cache
+      uses: AnimMouse/tool-cache@v1
+      with:
+        folder_name: age

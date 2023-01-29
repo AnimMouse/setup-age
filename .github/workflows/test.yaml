@@ -1,0 +1,25 @@
+name: Test setup-age
+on:
+  push:
+    paths:
+      - action.yaml
+      - scripts/**
+      - .github/workflows/test.yaml
+      
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        version: [latest, v1.0.0]
+        
+    steps:
+      - name: Setup age using setup-age
+        uses: AnimMouse/setup-age@main
+        with:
+          version: ${{ matrix.version }}
+          
+      - name: Test age by checking version
+        run: age --version
