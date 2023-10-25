@@ -32,8 +32,15 @@ runs:
         version: ${{ inputs.version }}
         GITHUB_TOKEN: ${{ inputs.token }}
         
+    - name: Restore age cache
+      id: cache
+      uses: actions/cache/restore@v3
+      with:
+        path: ${{ runner.tool_cache }}/age
+        key: age-${{ steps.version-unix-like.outputs.version || steps.version-windows.outputs.version }}-${{ runner.os }}
+        
     - name: Download age for Unix-like
-      if: runner.os == 'Linux' || runner.os == 'macOS'
+      if: (runner.os == 'Linux' || runner.os == 'macOS') && ! steps.cache.outputs.cache-hit
       shell: bash
       working-directory: ${{ runner.temp }}
       run: $GITHUB_ACTION_PATH/scripts/download/Unix-like.sh
@@ -41,7 +48,7 @@ runs:
         version: ${{ steps.version-unix-like.outputs.version }}
         
     - name: Download age for Windows
-      if: runner.os == 'Windows'
+      if: runner.os == 'Windows' && ! steps.cache.outputs.cache-hit
       shell: pwsh
       working-directory: ${{ runner.temp }}
       run: '& $env:GITHUB_ACTION_PATH\scripts\download\Windows.ps1'
@@ -52,3 +59,11 @@ runs:
       uses: AnimMouse/tool-cache@v1
       with:
         folder_name: age
+        cache_hit: ${{ steps.cache.outputs.cache-hit }}
+        
+    - name: Save age cache
+      if: '! steps.cache.outputs.cache-hit'
+      uses: actions/cache/save@v3
+      with:
+        path: ${{ runner.tool_cache }}/age
+        key: age-${{ steps.version-unix-like.outputs.version || steps.version-windows.outputs.version }}-${{ runner.os }}
