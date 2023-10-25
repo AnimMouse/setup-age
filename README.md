@@ -18,7 +18,7 @@ steps:
 ```
 
 ### Decrypt file
-Paste your age secret key to `AGE_SECRET_KEY` secret.
+Paste your age secret key to `AGE_SECRET_KEY` secret and use process substitution on the identity input.
 
 ```yaml
 steps:
@@ -40,7 +40,7 @@ steps:
 ```
 
 ### Specific version
-You can specify the version you want. By default, this action downloads the latest version.
+You can specify the version you want. By default, this action downloads the latest version if version is not specified.
 
 ```yaml
 steps:
