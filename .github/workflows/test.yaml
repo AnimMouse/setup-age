@@ -1,11 +1,16 @@
 name: Test setup-age
 on:
   push:
+    branches:
+      - main
     paths:
       - action.yaml
       - scripts/**
       - .github/workflows/test.yaml
-      
+  schedule:
+    - cron: '7 11 1 * *'
+  workflow_dispatch:
+  
 jobs:
   test:
     runs-on: ${{ matrix.os }}
@@ -13,13 +18,29 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        version: [latest, "${{ vars.SPECIFIED_VERSION }}"]
+        version: [latest, specified]
         
     steps:
+      - name: Get age penultimate version on Unix-like
+        id: penultimate-unix-like
+        if: (runner.os == 'Linux' || runner.os == 'macOS') && matrix.version == 'specified'
+        run: echo version=$(gh api repos/FiloSottile/age/releases -q .[1].tag_name) >> $GITHUB_OUTPUT
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          
+      - name: Get age penultimate version on Windows
+        id: penultimate-windows
+        if: runner.os == 'Windows' && matrix.version == 'specified'
+        run: |
+          $version = (gh api repos/FiloSottile/age/releases -q .[1].tag_name)
+          Add-Content $env:GITHUB_OUTPUT version=$version
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          
       - name: Setup age using setup-age
         uses: AnimMouse/setup-age@main
         with:
-          version: ${{ matrix.version }}
+          version: ${{ matrix.version == 'specified' && (steps.penultimate-unix-like.outputs.version || steps.penultimate-windows.outputs.version) || matrix.version }}
           
       - name: Test age by checking version
         run: age --version
