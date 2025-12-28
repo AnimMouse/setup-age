@@ -37,7 +37,7 @@ runs:
       uses: actions/cache/restore@v5
       with:
         path: ${{ runner.tool_cache }}/age
-        key: age-${{ steps.version-unix-like.outputs.version || steps.version-windows.outputs.version }}-${{ runner.os }}
+        key: age-${{ steps.version-unix-like.outputs.version || steps.version-windows.outputs.version }}-${{ runner.os }}-${{ runner.arch }}
         
     - name: Download age for Unix-like
       if: (runner.os == 'Linux' || runner.os == 'macOS') && ! steps.cache.outputs.cache-hit
@@ -66,4 +66,4 @@ runs:
       uses: actions/cache/save@v5
       with:
         path: ${{ runner.tool_cache }}/age
-        key: age-${{ steps.version-unix-like.outputs.version || steps.version-windows.outputs.version }}-${{ runner.os }}
+        key: age-${{ steps.version-unix-like.outputs.version || steps.version-windows.outputs.version }}-${{ runner.os }}-${{ runner.arch }}
